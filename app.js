@@ -458,6 +458,302 @@ function finishQuizSession(){
   });
 }
 
+/* ===================== EXAM MODE ===================== */
+const EXAM = {
+  TOTAL_Q: 90,
+  TIME_MIN: 90,
+  PASS_PCT: 75   // Security+ je 750/900 ≈ 83%, ali ovo je vježba pa 75% kao indikator
+};
+
+const exam = {
+  questions: [],
+  answers: {},     // qIdx -> selectedOptionIdx
+  flagged: new Set(),
+  current: 0,
+  startedAt: 0,
+  endsAt: 0,
+  tickHandle: null,
+  reviewFilter: 'all'
+};
+
+document.getElementById('btnExamMode').addEventListener('click', ()=>{
+  showModal({
+    title: 'Pokreni test',
+    text: '90 pitanja, 90 minuta. Odgovori se ne provjeravaju do kraja. Možeš se kretati naprijed-natrag, označavati pitanja za pregled i predati prije isteka vremena.',
+    confirmLabel: 'Pokreni',
+    confirmClass: 'amber',
+    onConfirm: startExam
+  });
+});
+
+function startExam(){
+  exam.questions = shuffle(QUIZ.slice()).slice(0, EXAM.TOTAL_Q);
+  exam.answers = {};
+  exam.flagged = new Set();
+  exam.current = 0;
+  exam.startedAt = Date.now();
+  exam.endsAt = exam.startedAt + EXAM.TIME_MIN * 60000;
+  showView('exam');
+  renderExamQuestion();
+  renderJumpbar();
+  startExamTimer();
+}
+
+function startExamTimer(){
+  stopExamTimer();
+  const tick = ()=>{
+    const remainingMs = exam.endsAt - Date.now();
+    if(remainingMs <= 0){
+      document.getElementById('examTimer').textContent = '00:00';
+      stopExamTimer();
+      submitExam(true);
+      return;
+    }
+    const totalSec = Math.floor(remainingMs / 1000);
+    const min = Math.floor(totalSec / 60);
+    const sec = totalSec % 60;
+    const el = document.getElementById('examTimer');
+    el.textContent = String(min).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+    el.classList.toggle('warning', remainingMs < 5 * 60000);
+  };
+  tick();
+  exam.tickHandle = setInterval(tick, 1000);
+}
+function stopExamTimer(){
+  if(exam.tickHandle){
+    clearInterval(exam.tickHandle);
+    exam.tickHandle = null;
+  }
+}
+
+function renderExamQuestion(){
+  const q = exam.questions[exam.current];
+  if(!q) return;
+  document.getElementById('examCounter').textContent = `${exam.current+1}/${exam.questions.length}`;
+  document.getElementById('examProgress').style.width = ((exam.current+1)/exam.questions.length*100) + '%';
+  document.getElementById('examDomainTag').textContent = q.domain;
+  document.getElementById('examQuestion').textContent = q.question;
+
+  const list = document.getElementById('examOptionList');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  const selected = exam.answers[exam.current];
+  q.options.forEach((opt, i)=>{
+    const text = (typeof opt === 'string') ? opt : opt.text;
+    const b = document.createElement('button');
+    b.className = 'option' + (selected === i ? ' selected' : '');
+    b.innerHTML = `<span class="letter">${letters[i]}</span><div class="opt-body"><span class="opt-text">${escapeHtml(text)}</span></div>`;
+    b.addEventListener('click', ()=>{
+      exam.answers[exam.current] = i;
+      renderExamQuestion();
+      renderJumpbar();
+    });
+    list.appendChild(b);
+  });
+
+  document.getElementById('examPrev').disabled = (exam.current === 0);
+  document.getElementById('examNext').disabled = (exam.current === exam.questions.length - 1);
+  const flagBtn = document.getElementById('examFlag');
+  flagBtn.classList.toggle('active', exam.flagged.has(exam.current));
+  flagBtn.textContent = exam.flagged.has(exam.current) ? '⚑ označeno' : '⚑ označi';
+}
+
+function renderJumpbar(){
+  const bar = document.getElementById('examJumpbar');
+  bar.innerHTML = '';
+  exam.questions.forEach((_, i)=>{
+    const dot = document.createElement('button');
+    let cls = 'jump-dot';
+    if(exam.answers[i] !== undefined) cls += ' answered';
+    if(exam.flagged.has(i)) cls += ' flagged';
+    if(i === exam.current) cls += ' current';
+    dot.className = cls;
+    dot.textContent = i+1;
+    dot.addEventListener('click', ()=>{
+      exam.current = i;
+      renderExamQuestion();
+      renderJumpbar();
+    });
+    bar.appendChild(dot);
+  });
+}
+
+document.getElementById('examPrev').addEventListener('click', ()=>{
+  if(exam.current > 0){ exam.current--; renderExamQuestion(); renderJumpbar(); }
+});
+document.getElementById('examNext').addEventListener('click', ()=>{
+  if(exam.current < exam.questions.length - 1){ exam.current++; renderExamQuestion(); renderJumpbar(); }
+});
+document.getElementById('examFlag').addEventListener('click', ()=>{
+  if(exam.flagged.has(exam.current)) exam.flagged.delete(exam.current);
+  else exam.flagged.add(exam.current);
+  renderExamQuestion();
+  renderJumpbar();
+});
+
+document.getElementById('examBack').addEventListener('click', ()=>{
+  showModal({
+    title: 'Prekinuti test?',
+    text: 'Trenutni odgovori se neće spremiti. Test se može ponoviti s novim nasumičnim pitanjima.',
+    confirmLabel: 'Prekini',
+    confirmClass: '',
+    onConfirm: ()=>{
+      stopExamTimer();
+      showView('home');
+    }
+  });
+});
+
+document.getElementById('examSubmit').addEventListener('click', ()=>{
+  const unanswered = exam.questions.length - Object.keys(exam.answers).length;
+  const msg = unanswered > 0
+    ? `Neodgovorenih pitanja: ${unanswered}. Predati test?`
+    : 'Svi odgovori su uneseni. Predati test?';
+  showModal({
+    title: 'Predaja testa',
+    text: msg,
+    confirmLabel: 'Predaj',
+    confirmClass: 'amber',
+    onConfirm: ()=>submitExam(false)
+  });
+});
+
+function submitExam(timeUp){
+  stopExamTimer();
+  // izračunaj rezultate
+  let correct = 0;
+  const byDomain = {};
+  exam.questions.forEach((q, i)=>{
+    const sel = exam.answers[i];
+    const isCorrect = sel === q.correct;
+    if(isCorrect) correct++;
+    if(!byDomain[q.domain]) byDomain[q.domain] = {correct:0, total:0};
+    byDomain[q.domain].total++;
+    if(isCorrect) byDomain[q.domain].correct++;
+  });
+  const total = exam.questions.length;
+  const pct = Math.round(correct/total*100);
+  const passed = pct >= EXAM.PASS_PCT;
+  const elapsedSec = Math.floor((Date.now() - exam.startedAt) / 1000);
+  const elapsedMin = Math.floor(elapsedSec/60);
+  const elapsedRest = elapsedSec % 60;
+
+  // popuni summary
+  const summary = document.getElementById('examSummary');
+  const breakdown = Object.entries(byDomain)
+    .sort((a,b)=> (a[1].correct/a[1].total) - (b[1].correct/b[1].total))
+    .map(([dom, s])=>{
+      const dp = Math.round(s.correct/s.total*100);
+      return `<div class="exam-domain-row">
+        <span class="dn">${escapeHtml(dom)}</span>
+        <span class="dbar"><span class="dbar-fill" style="width:${dp}%; background:${dp>=75?'var(--green)':dp>=50?'var(--amber)':'var(--red)'}"></span></span>
+        <span class="dscore">${s.correct}/${s.total}</span>
+      </div>`;
+    }).join('');
+
+  summary.innerHTML = `
+    <div class="exam-summary-row">
+      <span class="label">Rezultat</span>
+      <span class="val ${passed?'pass':'fail'}">${correct}/${total} · ${pct}%</span>
+    </div>
+    <div class="exam-summary-row">
+      <span class="label">Status</span>
+      <span class="val ${passed?'pass':'fail'}">${passed?'PROŠAO':'PAO'} (prag ${EXAM.PASS_PCT}%)</span>
+    </div>
+    <div class="exam-summary-row">
+      <span class="label">Vrijeme</span>
+      <span class="val">${String(elapsedMin).padStart(2,'0')}:${String(elapsedRest).padStart(2,'0')}${timeUp?' (isteklo)':''}</span>
+    </div>
+    <div class="exam-summary-row">
+      <span class="label">Označeno za pregled</span>
+      <span class="val">${exam.flagged.size}</span>
+    </div>
+    <div class="exam-domain-breakdown">${breakdown}</div>
+  `;
+
+  exam.reviewFilter = 'all';
+  document.querySelectorAll('.exam-filter-btn').forEach(b=>b.classList.toggle('active', b.dataset.filter==='all'));
+  renderExamReview();
+  showView('exam-review');
+}
+
+function renderExamReview(){
+  const list = document.getElementById('examReviewList');
+  list.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  exam.questions.forEach((q, i)=>{
+    const sel = exam.answers[i];
+    const isCorrect = sel === q.correct;
+    const isSkipped = (sel === undefined);
+    const isFlagged = exam.flagged.has(i);
+    // filter
+    if(exam.reviewFilter === 'wrong' && (isCorrect || isSkipped)) return;
+    if(exam.reviewFilter === 'flagged' && !isFlagged) return;
+    if(exam.reviewFilter === 'skipped' && !isSkipped) return;
+
+    const correctOpt = q.options[q.correct];
+    const correctText = (typeof correctOpt === 'string') ? correctOpt : correctOpt.text;
+    let yourLine = '';
+    if(isSkipped){
+      yourLine = `<div class="review-line skipped"><span class="lbl">Tvoj odgovor:</span><span class="ans">(preskočeno)</span></div>`;
+    } else if(isCorrect){
+      yourLine = `<div class="review-line your-correct"><span class="lbl">Tvoj odgovor:</span><span class="ans">${letters[sel]} · ${escapeHtml(correctText)}</span></div>`;
+    } else {
+      const yourOpt = q.options[sel];
+      const yourText = (typeof yourOpt === 'string') ? yourOpt : yourOpt.text;
+      const belongsTo = (typeof yourOpt === 'object') ? yourOpt.belongsTo : null;
+      yourLine = `<div class="review-line your-wrong"><span class="lbl">Tvoj odgovor:</span><span class="ans">${letters[sel]} · ${escapeHtml(yourText)}</span></div>`;
+      if(belongsTo){
+        yourLine += `<div class="review-line"><span class="lbl">↳</span><span>definicija pojma „${escapeHtml(belongsTo)}"</span></div>`;
+      }
+    }
+
+    const cls = isCorrect ? 'correct' : isSkipped ? 'skipped' : 'wrong';
+    const item = document.createElement('div');
+    item.className = `exam-review-item ${cls}`;
+    item.innerHTML = `
+      <div class="review-num">Pitanje ${i+1}${isFlagged?'<span class="flag">⚑ označeno</span>':''}</div>
+      <div class="review-q">${escapeHtml(q.question)}</div>
+      ${yourLine}
+      <div class="review-line correct"><span class="lbl">Točan odgovor:</span><span class="ans">${letters[q.correct]} · ${escapeHtml(correctText)}</span></div>
+      <div class="review-domain">Domena: ${escapeHtml(q.domain)}</div>
+    `;
+    list.appendChild(item);
+  });
+  if(list.children.length === 0){
+    list.innerHTML = `<div style="text-align:center; color:var(--text-faint); font-family:var(--mono); font-size:12px; padding:30px;">Nema pitanja u ovoj kategoriji.</div>`;
+  }
+}
+
+document.getElementById('examFilter').addEventListener('click', (e)=>{
+  const b = e.target.closest('.exam-filter-btn');
+  if(!b) return;
+  exam.reviewFilter = b.dataset.filter;
+  document.querySelectorAll('.exam-filter-btn').forEach(x=>x.classList.toggle('active', x===b));
+  renderExamReview();
+});
+
+document.getElementById('examReviewBack').addEventListener('click', ()=>showView('home'));
+
+/* ===================== MODAL ===================== */
+function showModal({title, text, confirmLabel, confirmClass, onConfirm}){
+  const bd = document.getElementById('modalBackdrop');
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalText').textContent = text;
+  const ok = document.getElementById('modalOk');
+  ok.textContent = confirmLabel || 'Potvrdi';
+  ok.className = 'btn-primary modal-confirm' + (confirmClass ? ' '+confirmClass : '');
+  bd.style.display = '';
+  const close = ()=>{ bd.style.display='none'; };
+  const newOk = ok.cloneNode(true);
+  ok.parentNode.replaceChild(newOk, ok);
+  newOk.addEventListener('click', ()=>{ close(); onConfirm && onConfirm(); });
+  const cancel = document.getElementById('modalCancel');
+  const newCancel = cancel.cloneNode(true);
+  cancel.parentNode.replaceChild(newCancel, cancel);
+  newCancel.addEventListener('click', close);
+}
+
 /* ===================== RESULT ===================== */
 function showResult({pct, title, sub, retryAction}){
   showView('result');

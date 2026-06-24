@@ -203,6 +203,7 @@ button{
   grid-template-columns:1fr 1fr;
   gap:10px;
 }
+.mode-card-wide{grid-column: 1 / -1;}
 .mode-card{
   background:var(--bg-card);
   border:1px solid var(--line);
@@ -213,9 +214,262 @@ button{
   flex-direction:column;
   gap:6px;
 }
+.mode-card-wide{
+  border-color:var(--amber-dim);
+  background:linear-gradient(135deg, rgba(245,166,35,0.05), var(--bg-card));
+}
 .mode-card .icon{font-size:20px; margin-bottom:4px;}
 .mode-card .title{font-weight:700; font-size:14px;}
 .mode-card .desc{color:var(--text-dim); font-size:12px; line-height:1.4;}
+
+/* ===== EXAM ===== */
+.exam-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:10px;
+  gap:12px;
+}
+.exam-timer{
+  font-family:var(--mono);
+  font-size:18px;
+  font-weight:700;
+  color:var(--amber);
+  letter-spacing:0.04em;
+  padding:4px 12px;
+  border:1px solid var(--amber-dim);
+  border-radius:6px;
+  background:rgba(245,166,35,0.06);
+  min-width:80px;
+  text-align:center;
+}
+.exam-timer.warning{color:var(--red); border-color:#5A2426; background:rgba(229,72,77,0.08);}
+.exam-progress-track{
+  height:3px;
+  background:var(--line);
+  border-radius:2px;
+  margin-bottom:18px;
+  overflow:hidden;
+}
+.exam-progress-fill{
+  height:100%;
+  background:var(--amber);
+  width:0%;
+  transition:width .25s;
+}
+.exam-domain-tag{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:10px;
+}
+.exam-nav{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:8px;
+  margin-top:18px;
+  align-items:center;
+}
+.exam-nav-btn{
+  padding:11px 14px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--bg-card);
+  color:var(--text-dim);
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:600;
+}
+.exam-nav-btn:disabled{opacity:0.35;}
+.exam-nav-btn.exam-next{color:var(--text);}
+.exam-flag{
+  padding:11px 14px;
+  border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--bg-card);
+  color:var(--text-dim);
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:600;
+}
+.exam-flag.active{
+  color:var(--amber);
+  border-color:var(--amber-dim);
+  background:rgba(245,166,35,0.1);
+}
+.exam-jumpbar{
+  display:grid;
+  grid-template-columns:repeat(10, 1fr);
+  gap:4px;
+  margin-top:22px;
+  padding:10px;
+  border-radius:8px;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+}
+.jump-dot{
+  aspect-ratio:1;
+  border-radius:4px;
+  border:1px solid var(--line);
+  background:transparent;
+  font-family:var(--mono);
+  font-size:9px;
+  color:var(--text-faint);
+  padding:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.jump-dot.answered{background:var(--line-bright); color:var(--text);}
+.jump-dot.flagged{border-color:var(--amber); color:var(--amber);}
+.jump-dot.current{outline:2px solid var(--cyan); outline-offset:1px;}
+
+.exam-submit{
+  margin-top:18px;
+  padding:14px;
+  border-radius:10px;
+  background:var(--amber);
+  color:var(--bg);
+  font-family:var(--mono);
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:0.04em;
+}
+
+/* options in exam mode: no correct/wrong colors during test */
+#examOptionList .option.selected{
+  border-color:var(--cyan);
+  background:rgba(61,214,200,0.08);
+}
+#examOptionList .option.selected .letter{color:var(--cyan);}
+
+/* ===== EXAM REVIEW ===== */
+.exam-summary{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:18px;
+  margin-bottom:18px;
+}
+.exam-summary-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+  font-size:13px;
+}
+.exam-summary-row:last-child{margin-bottom:0;}
+.exam-summary-row .label{color:var(--text-dim); font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.06em;}
+.exam-summary-row .val{font-family:var(--mono); font-weight:700;}
+.exam-summary-row .val.pass{color:var(--green);}
+.exam-summary-row .val.fail{color:var(--red);}
+.exam-domain-breakdown{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+}
+.exam-domain-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:6px;
+  font-size:11.5px;
+  font-family:var(--mono);
+}
+.exam-domain-row .dn{flex:1; color:var(--text-dim);}
+.exam-domain-row .dscore{color:var(--text); min-width:60px; text-align:right;}
+.exam-domain-row .dbar{flex:0 0 60px; height:4px; background:var(--line); border-radius:2px; overflow:hidden;}
+.exam-domain-row .dbar-fill{height:100%; background:var(--green);}
+
+.exam-filter{
+  display:flex;
+  gap:6px;
+  margin-bottom:14px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+.exam-filter-btn{
+  padding:7px 12px;
+  border-radius:18px;
+  border:1px solid var(--line);
+  background:var(--bg-card);
+  color:var(--text-dim);
+  font-family:var(--mono);
+  font-size:11px;
+  white-space:nowrap;
+}
+.exam-filter-btn.active{
+  color:var(--amber);
+  border-color:var(--amber-dim);
+  background:rgba(245,166,35,0.1);
+}
+.exam-review-item{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:14px 16px;
+  margin-bottom:10px;
+  border-left-width:3px;
+}
+.exam-review-item.correct{border-left-color:var(--green);}
+.exam-review-item.wrong{border-left-color:var(--red);}
+.exam-review-item.skipped{border-left-color:var(--text-faint);}
+.review-num{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-faint);
+  margin-bottom:6px;
+}
+.review-num .flag{color:var(--amber); margin-left:6px;}
+.review-q{font-size:13.5px; line-height:1.45; margin-bottom:10px;}
+.review-line{
+  font-family:var(--mono);
+  font-size:11.5px;
+  line-height:1.5;
+  padding:6px 0;
+}
+.review-line .lbl{color:var(--text-faint); margin-right:6px;}
+.review-line.correct .ans{color:var(--green);}
+.review-line.your-wrong .ans{color:var(--red);}
+.review-line.your-correct .ans{color:var(--green);}
+.review-domain{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--cyan);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  margin-top:10px;
+  padding-top:8px;
+  border-top:1px solid var(--line);
+}
+
+/* ===== MODAL ===== */
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.65);
+  z-index:200;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  backdrop-filter:blur(4px);
+}
+.modal{
+  background:var(--bg-card);
+  border:1px solid var(--line-bright);
+  border-radius:14px;
+  padding:22px;
+  max-width:380px;
+  width:100%;
+}
+.modal-title{font-size:16px; font-weight:700; margin-bottom:8px;}
+.modal-text{color:var(--text-dim); font-size:13px; line-height:1.5; margin-bottom:18px;}
+.modal-actions{display:flex; gap:8px; justify-content:flex-end;}
+.modal-confirm{background:var(--red); color:var(--text);}
+.modal-confirm.amber{background:var(--amber); color:var(--bg);}
 
 /* ===== FLASHCARD VIEW ===== */
 .session-header{
@@ -563,7 +817,12 @@ button{
     <button class="mode-card" id="btnQuickQuiz">
       <div class="icon">▤</div>
       <div class="title">Kviz — nasumično</div>
-      <div class="desc">15 pitanja iz svih domena, simulacija ispita</div>
+      <div class="desc">15 pitanja iz svih domena, s objašnjenjima</div>
+    </button>
+    <button class="mode-card mode-card-wide" id="btnExamMode">
+      <div class="icon">⏱</div>
+      <div class="title">Test mode — simulacija ispita</div>
+      <div class="desc">90 pitanja u 90 minuta, bez prikaza odgovora do kraja. Pregled svih odgovora i objašnjenja na kraju.</div>
     </button>
   </div>
 
@@ -630,6 +889,58 @@ button{
   <div class="quiz-footer">
     <div class="score-line">Točno: <b id="quizScore">0</b></div>
     <button class="next-btn" id="quizNext">Dalje →</button>
+  </div>
+</div>
+
+<!-- EXAM (TEST MODE) VIEW -->
+<div class="view" id="view-exam">
+  <div class="exam-header">
+    <button class="back-btn" id="examBack">← prekini</button>
+    <div class="exam-timer" id="examTimer">90:00</div>
+    <div class="counter" id="examCounter">1/90</div>
+  </div>
+  <div class="exam-progress-track"><div class="exam-progress-fill" id="examProgress"></div></div>
+
+  <div class="exam-domain-tag" id="examDomainTag"></div>
+  <div class="quiz-q" id="examQuestion"></div>
+  <div class="option-list" id="examOptionList"></div>
+
+  <div class="exam-nav">
+    <button class="exam-nav-btn" id="examPrev">← prethodno</button>
+    <button class="exam-flag" id="examFlag" title="Označi za pregled">⚑ označi</button>
+    <button class="exam-nav-btn exam-next" id="examNext">sljedeće →</button>
+  </div>
+
+  <div class="exam-jumpbar" id="examJumpbar"></div>
+
+  <button class="exam-submit" id="examSubmit">Predaj test</button>
+</div>
+
+<!-- EXAM REVIEW VIEW -->
+<div class="view" id="view-exam-review">
+  <div class="session-header">
+    <button class="back-btn" id="examReviewBack">← nazad</button>
+    <div class="counter" id="examReviewCounter">Pregled</div>
+  </div>
+  <div class="exam-summary" id="examSummary"></div>
+  <div class="exam-filter" id="examFilter">
+    <button class="exam-filter-btn active" data-filter="all">Sva</button>
+    <button class="exam-filter-btn" data-filter="wrong">Pogrešna</button>
+    <button class="exam-filter-btn" data-filter="flagged">Označena</button>
+    <button class="exam-filter-btn" data-filter="skipped">Preskočena</button>
+  </div>
+  <div class="exam-review-list" id="examReviewList"></div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" style="display:none;">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-text" id="modalText"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="modalCancel">Odustani</button>
+      <button class="btn-primary modal-confirm" id="modalOk">Potvrdi</button>
+    </div>
   </div>
 </div>
 

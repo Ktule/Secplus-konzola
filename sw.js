@@ -1,4 +1,4 @@
-const CACHE = 'secplus-v2';
+const CACHE = 'secplus-v3';
 const ASSETS = [
   './',
   './index.html',
