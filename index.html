@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0B0E11">
+<title>SEC+ Konzola</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{
+  --bg:#0B0E11;
+  --bg-raised:#11161B;
+  --bg-card:#151B21;
+  --line:#222B33;
+  --line-bright:#324050;
+  --text:#DCE4EA;
+  --text-dim:#7A8A99;
+  --text-faint:#4D5A66;
+  --amber:#F5A623;
+  --amber-dim:#8A5E1A;
+  --cyan:#3DD6C8;
+  --red:#E5484D;
+  --green:#3FB950;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html,body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  height:100%;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+body{
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  min-height:100dvh;
+}
+button{
+  font-family:inherit;
+  border:none;
+  background:none;
+  color:inherit;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+::selection{background:var(--amber-dim); color:var(--text);}
+
+/* ===== TOP BAR ===== */
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 18px;
+  border-bottom:1px solid var(--line);
+  background:var(--bg-raised);
+  position:sticky;
+  top:0;
+  z-index:50;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:var(--mono);
+  font-size:13px;
+  letter-spacing:0.06em;
+  color:var(--text-dim);
+}
+.brand .dot{
+  width:8px; height:8px; border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 8px var(--green);
+}
+.brand b{color:var(--text); font-weight:600;}
+.stat-pill{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--amber);
+  border:1px solid var(--amber-dim);
+  border-radius:20px;
+  padding:4px 10px;
+  background:rgba(245,166,35,0.06);
+}
+
+/* ===== MAIN VIEWS ===== */
+.view{
+  flex:1;
+  display:none;
+  flex-direction:column;
+  padding:18px;
+  padding-bottom:90px;
+  max-width:760px;
+  width:100%;
+  margin:0 auto;
+}
+.view.active{display:flex;}
+
+/* ===== HOME ===== */
+.hero{
+  padding:18px 4px 22px;
+}
+.hero-eyebrow{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:10px;
+}
+.hero h1{
+  font-size:26px;
+  font-weight:700;
+  line-height:1.25;
+  letter-spacing:-0.01em;
+  margin-bottom:8px;
+}
+.hero p{
+  color:var(--text-dim);
+  font-size:14px;
+  line-height:1.5;
+  max-width:520px;
+}
+
+.domain-map{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+  gap:8px;
+  margin-top:6px;
+}
+.domain-tile{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:12px 12px 10px;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-height:92px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .15s, transform .1s;
+}
+.domain-tile:active{transform:scale(0.97);}
+.domain-tile:hover{border-color:var(--line-bright);}
+.domain-tile .idx{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-faint);
+}
+.domain-tile .name{
+  font-size:12.5px;
+  font-weight:600;
+  line-height:1.3;
+  color:var(--text);
+}
+.domain-tile .meta{
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--text-dim);
+  margin-top:auto;
+}
+.domain-tile .bar{
+  position:absolute;
+  bottom:0; left:0; right:0;
+  height:3px;
+  background:var(--line);
+}
+.domain-tile .bar-fill{
+  height:100%;
+  background:var(--cyan);
+  width:0%;
+  transition:width .3s;
+}
+.domain-tile.mastered{border-color:var(--green);}
+.domain-tile.mastered .bar-fill{background:var(--green);}
+
+.section-label{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:var(--text-faint);
+  margin:26px 0 12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.section-label::after{
+  content:'';
+  flex:1;
+  height:1px;
+  background:var(--line);
+}
+
+.mode-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.mode-card{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:16px;
+  text-align:left;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.mode-card .icon{font-size:20px; margin-bottom:4px;}
+.mode-card .title{font-weight:700; font-size:14px;}
+.mode-card .desc{color:var(--text-dim); font-size:12px; line-height:1.4;}
+
+/* ===== FLASHCARD VIEW ===== */
+.session-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:18px;
+}
+.back-btn{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-dim);
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.progress-track{
+  flex:1;
+  height:3px;
+  background:var(--line);
+  border-radius:2px;
+  margin:0 14px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background:var(--cyan);
+  width:0%;
+  transition:width .25s;
+}
+.counter{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-dim);
+}
+
+.card-stage{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  perspective:1200px;
+  min-height:340px;
+}
+.flashcard{
+  width:100%;
+  max-width:480px;
+  min-height:300px;
+  position:relative;
+  cursor:pointer;
+}
+.flashcard-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  min-height:300px;
+  transition:transform .45s cubic-bezier(.2,.8,.2,1);
+  transform-style:preserve-3d;
+}
+.flashcard.flipped .flashcard-inner{transform:rotateY(180deg);}
+.face{
+  position:absolute;
+  inset:0;
+  backface-visibility:hidden;
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:var(--bg-card);
+  padding:28px 26px;
+  display:flex;
+  flex-direction:column;
+  min-height:300px;
+}
+.face-front{justify-content:center; align-items:center; text-align:center;}
+.face-back{transform:rotateY(180deg); justify-content:flex-start;}
+.face .domain-tag{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:14px;
+}
+.face-front .term{
+  font-size:24px;
+  font-weight:700;
+  line-height:1.3;
+}
+.face-front .hint{
+  margin-top:18px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-faint);
+}
+.face-back .term-small{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-faint);
+  margin-bottom:10px;
+}
+.face-back .def{
+  font-size:16px;
+  line-height:1.55;
+  color:var(--text);
+}
+.face-back .extra{
+  margin-top:14px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+  font-size:12.5px;
+  color:var(--text-dim);
+  line-height:1.5;
+}
+.face-back .extra li{margin-bottom:4px; list-style:none; padding-left:14px; position:relative;}
+.face-back .extra li::before{content:'›'; position:absolute; left:0; color:var(--text-faint);}
+
+.rate-row{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  margin-top:18px;
+}
+.rate-btn{
+  padding:13px 8px;
+  border-radius:10px;
+  font-size:13px;
+  font-weight:600;
+  text-align:center;
+  border:1px solid var(--line);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+}
+.rate-row.show .rate-btn{opacity:1; pointer-events:all;}
+.rate-btn.again{color:var(--red); border-color:#5A2426;}
+.rate-btn.again:active{background:rgba(229,72,77,0.12);}
+.rate-btn.ok{color:var(--amber); border-color:var(--amber-dim);}
+.rate-btn.ok:active{background:rgba(245,166,35,0.1);}
+.rate-btn.easy{color:var(--green); border-color:#1F5C30;}
+.rate-btn.easy:active{background:rgba(63,185,80,0.12);}
+.tap-hint{
+  text-align:center;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-faint);
+  margin-top:14px;
+}
+
+/* ===== QUIZ VIEW ===== */
+.quiz-q{
+  font-size:18px;
+  font-weight:600;
+  line-height:1.4;
+  margin:6px 0 22px;
+}
+.quiz-domain-tag{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:10px;
+}
+.option-list{display:flex; flex-direction:column; gap:10px;}
+.option{
+  text-align:left;
+  padding:14px 16px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:var(--bg-card);
+  font-size:14px;
+  line-height:1.45;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.option .letter{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-faint);
+  flex-shrink:0;
+  width:18px;
+}
+.opt-body{display:flex; flex-direction:column; gap:0;}
+.opt-text{display:block;}
+.opt-note{
+  font-family:var(--mono);
+  font-size:11px;
+  line-height:1.4;
+  margin-top:8px;
+  color:var(--text-dim);
+}
+.option.correct .opt-note{color:var(--green);}
+.option.wrong .opt-note{color:var(--red);}
+.option.answered-dim{opacity:0.62;}
+.option.correct{border-color:var(--green); background:rgba(63,185,80,0.08);}
+.option.correct .letter{color:var(--green);}
+.option.wrong{border-color:var(--red); background:rgba(229,72,77,0.08);}
+.option.wrong .letter{color:var(--red);}
+.option.dim{opacity:0.45;}
+.option:disabled{pointer-events:none;}
+
+.quiz-domain-note{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:0.04em;
+  color:var(--cyan);
+  margin-top:16px;
+  padding:10px 14px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:rgba(61,214,200,0.05);
+}
+
+.quiz-footer{
+  margin-top:24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.next-btn{
+  font-family:var(--mono);
+  font-size:13px;
+  font-weight:600;
+  color:var(--bg);
+  background:var(--amber);
+  padding:11px 22px;
+  border-radius:8px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+}
+.next-btn.show{opacity:1; pointer-events:all;}
+.score-line{
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-dim);
+}
+.score-line b{color:var(--green);}
+
+/* ===== RESULT VIEW ===== */
+.result-stage{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:6px;
+}
+.result-ring{
+  width:140px; height:140px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:20px;
+  position:relative;
+}
+.result-ring svg{position:absolute; inset:0; transform:rotate(-90deg);}
+.result-pct{font-family:var(--mono); font-size:28px; font-weight:700;}
+.result-label{font-family:var(--mono); font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.08em;}
+.result-title{font-size:20px; font-weight:700; margin-top:18px;}
+.result-sub{color:var(--text-dim); font-size:13px; margin-top:6px; max-width:320px;}
+.result-actions{display:flex; gap:10px; margin-top:28px;}
+.btn-primary, .btn-secondary{
+  padding:12px 20px;
+  border-radius:9px;
+  font-size:13px;
+  font-weight:600;
+  font-family:var(--mono);
+}
+.btn-primary{background:var(--amber); color:var(--bg);}
+.btn-secondary{background:var(--bg-card); color:var(--text-dim); border:1px solid var(--line);}
+
+/* ===== BOTTOM NAV ===== */
+.bottomnav{
+  position:fixed;
+  bottom:0; left:0; right:0;
+  background:var(--bg-raised);
+  border-top:1px solid var(--line);
+  display:flex;
+  padding:8px 12px env(safe-area-inset-bottom);
+  z-index:50;
+}
+.navbtn{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  padding:8px 0;
+  color:var(--text-faint);
+  font-size:10.5px;
+  font-family:var(--mono);
+  letter-spacing:0.04em;
+}
+.navbtn.active{color:var(--amber);}
+.navbtn .glyph{font-size:17px; line-height:1;}
+
+@media (min-width:600px){
+  .domain-map{grid-template-columns:repeat(3,1fr);}
+}
+@media (prefers-reduced-motion: reduce){
+  .flashcard-inner{transition:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span class="dot"></span><b>SEC+</b>&nbsp;konzola</div>
+  <div class="stat-pill" id="streakPill">0 dana niz</div>
+</div>
+
+<!-- HOME VIEW -->
+<div class="view active" id="view-home">
+  <div class="hero">
+    <div class="hero-eyebrow">SY0-701 // priprema za ispit</div>
+    <h1>26 domena. Jedan ekran.</h1>
+    <p>Kartice i kviz iz cjelokupnog gradiva Security+, mapirano po domeni. Radi offline, pamti napredak na uređaju.</p>
+  </div>
+
+  <div class="section-label">Brzi start</div>
+  <div class="mode-row">
+    <button class="mode-card" id="btnQuickFlash">
+      <div class="icon">▣</div>
+      <div class="title">Kartice — slabe točke</div>
+      <div class="desc">20 kartica, prioritet pojmovima koje često griješiš</div>
+    </button>
+    <button class="mode-card" id="btnQuickQuiz">
+      <div class="icon">▤</div>
+      <div class="title">Kviz — nasumično</div>
+      <div class="desc">15 pitanja iz svih domena, simulacija ispita</div>
+    </button>
+  </div>
+
+  <div class="section-label">Domene</div>
+  <div class="domain-map" id="domainMap"></div>
+</div>
+
+<!-- FLASHCARD VIEW -->
+<div class="view" id="view-flash">
+  <div class="session-header">
+    <button class="back-btn" id="flashBack">← nazad</button>
+    <div class="progress-track"><div class="progress-fill" id="flashProgress"></div></div>
+    <div class="counter" id="flashCounter">0/0</div>
+  </div>
+  <div class="card-stage">
+    <div class="flashcard" id="flashcard">
+      <div class="flashcard-inner">
+        <div class="face face-front">
+          <div class="domain-tag" id="flashDomainFront"></div>
+          <div class="term" id="flashTerm"></div>
+          <div class="hint">dotakni za definiciju</div>
+        </div>
+        <div class="face face-back">
+          <div class="domain-tag" id="flashDomainBack"></div>
+          <div class="term-small" id="flashTermBack"></div>
+          <div class="def" id="flashDef"></div>
+          <ul class="extra" id="flashExtra" style="display:none;"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="rate-row" id="rateRow">
+    <button class="rate-btn again" data-rate="again">Ne znam</button>
+    <button class="rate-btn ok" data-rate="ok">Polovično</button>
+    <button class="rate-btn easy" data-rate="easy">Znam</button>
+  </div>
+  <div class="tap-hint" id="tapHint">okreni karticu prije ocjene</div>
+</div>
+
+<!-- QUIZ VIEW -->
+<div class="view" id="view-quiz">
+  <div class="session-header">
+    <button class="back-btn" id="quizBack">← nazad</button>
+    <div class="progress-track"><div class="progress-fill" id="quizProgress"></div></div>
+    <div class="counter" id="quizCounter">0/0</div>
+  </div>
+  <div class="quiz-domain-tag" id="quizDomainTag"></div>
+  <div class="quiz-q" id="quizQuestion"></div>
+  <div class="option-list" id="optionList"></div>
+  <div class="quiz-domain-note" id="quizDomainNote" style="display:none;"></div>
+  <div class="quiz-footer">
+    <div class="score-line">Točno: <b id="quizScore">0</b></div>
+    <button class="next-btn" id="quizNext">Dalje →</button>
+  </div>
+</div>
+
+<!-- RESULT VIEW -->
+<div class="view" id="view-result">
+  <div class="result-stage">
+    <div class="result-ring">
+      <svg width="140" height="140" viewBox="0 0 140 140">
+        <circle cx="70" cy="70" r="62" fill="none" stroke="#222B33" stroke-width="10"/>
+        <circle cx="70" cy="70" r="62" fill="none" stroke="#3DD6C8" stroke-width="10"
+          stroke-dasharray="389.6" stroke-dashoffset="389.6" id="resultArc" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="result-pct" id="resultPct">0%</div>
+        <div class="result-label">tačno</div>
+      </div>
+    </div>
+    <div class="result-title" id="resultTitle">Sesija završena</div>
+    <div class="result-sub" id="resultSub"></div>
+    <div class="result-actions">
+      <button class="btn-secondary" id="resultHome">Početna</button>
+      <button class="btn-primary" id="resultRetry">Ponovi</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottomnav">
+  <button class="navbtn active" data-view="home"><span class="glyph">◆</span>Početna</button>
+  <button class="navbtn" data-view="flash"><span class="glyph">▣</span>Kartice</button>
+  <button class="navbtn" data-view="quiz"><span class="glyph">▤</span>Kviz</button>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

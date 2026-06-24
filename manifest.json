@@ -1,0 +1,25 @@
+{
+  "name": "SEC+ Konzola — Security+ priprema",
+  "short_name": "SEC+ Konzola",
+  "description": "Kartice i kviz za pripremu CompTIA Security+ (SY0-701) ispita, radi offline.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0B0E11",
+  "theme_color": "#0B0E11",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
