@@ -53,30 +53,53 @@ function domainQuiz(name){ return QUIZ.filter(q=>q.domain===name); }
 function domainMastery(name){
   const cards = domainCards(name);
   if(!cards.length) return 0;
-  let masteredCount = 0;
+  let totalScore = 0;
   cards.forEach(c=>{
     const st = state.progress.cardStats[c.id];
-    if(st && st.lastRate === 'easy') masteredCount++;
+    if(st && st.fsrs){
+      // svladanost: stability ≥ 21 dan = 100%, linearno do tamo
+      totalScore += Math.min(1, st.fsrs.s / 21);
+    }
   });
-  return masteredCount / cards.length;
+  return totalScore / cards.length;
 }
 
 function renderDomainMap(){
   const el = document.getElementById('domainMap');
   el.innerHTML = '';
+  const now = Date.now();
   domainOrder.forEach((name, i)=>{
     const cards = domainCards(name);
     const mastery = domainMastery(name);
+    let dueCount = 0;
+    cards.forEach(c=>{
+      const st = state.progress.cardStats[c.id];
+      if(!st || !st.fsrs || FSRS.isDue(st.fsrs, now)) dueCount++;
+    });
     const tile = document.createElement('button');
     tile.className = 'domain-tile' + (mastery >= 0.8 ? ' mastered' : '');
     tile.innerHTML = `
       <div class="idx">D${String(i+1).padStart(2,'0')}</div>
       <div class="name">${escapeHtml(name)}</div>
-      <div class="meta">${cards.length} pojmova</div>
+      <div class="meta">${cards.length} pojmova · <span class="due-count">${dueCount} za pregled</span></div>
       <div class="bar"><div class="bar-fill" style="width:${Math.round(mastery*100)}%"></div></div>
     `;
     tile.addEventListener('click', ()=>{
-      openFlashSession(domainCards(name));
+      // u domeni: prioritetno dospjele, pa nove
+      const domainDue = [];
+      const domainFresh = [];
+      cards.forEach(c=>{
+        const st = state.progress.cardStats[c.id];
+        if(!st || !st.fsrs) domainFresh.push(c);
+        else if(FSRS.isDue(st.fsrs, now)) domainDue.push(c);
+      });
+      const session = [...domainDue, ...shuffle(domainFresh)].slice(0, 30);
+      if(session.length === 0){
+        // sve svladano za sada — ponudi nasumicni izbor
+        openFlashSession(shuffle(cards.slice()).slice(0,15));
+      } else {
+        openFlashSession(session);
+      }
     });
     el.appendChild(tile);
   });
@@ -96,6 +119,10 @@ function showView(v){
     b.classList.toggle('active', b.dataset.view === v);
   });
   state.view = v;
+  if(v === 'home'){
+    renderDomainMap();
+    updateHomeStats();
+  }
 }
 
 document.querySelectorAll('.navbtn').forEach(b=>{
@@ -120,24 +147,114 @@ function shuffle(arr){
   return arr;
 }
 
-function weakestCards(n){
-  // prioritiziraj kartice koje nisu vidjene ili su ocijenjene 'again'
-  const withScore = CARDS.map(c=>{
+/* ===================== FSRS (pojednostavljen) ===================== */
+// Implementacija inspirirana FSRS-4: stability + difficulty model.
+// Ocjene: 1=again, 2=hard, 3=good, 4=easy
+const FSRS = {
+  // početni stability po prvoj ocjeni (u danima)
+  initStability: {1: 0.5, 2: 1.2, 3: 2.5, 4: 6.0},
+  // početni difficulty (1-10), niži = lakše
+  initDifficulty: {1: 8.0, 2: 6.5, 3: 5.0, 4: 3.5},
+  // retention target — koliko želimo da pamtimo (0.9 = 90%)
+  retention: 0.9,
+  // faktori za novi stability nakon uspješnog odgovora
+  stabilityFactor: {2: 1.2, 3: 2.5, 4: 4.0},
+  // faktor smanjenja stability nakon "again"
+  forgetFactor: 0.2,
+
+  schedule(state, rating, nowMs){
+    // state: {s, d, reps, lapses, due, lastReview} ili null
+    const now = nowMs || Date.now();
+    const ONE_DAY = 86400000;
+
+    if(!state || state.reps === 0){
+      // prvi put
+      const s = this.initStability[rating];
+      const d = this.initDifficulty[rating];
+      return {
+        s, d,
+        reps: 1,
+        lapses: rating === 1 ? 1 : 0,
+        lastReview: now,
+        due: now + s * ONE_DAY
+      };
+    }
+
+    let { s, d, reps, lapses } = state;
+    reps += 1;
+
+    // difficulty update — povećava se za teže ocjene, smanjuje za lakše
+    const deltaD = (3 - rating) * 0.6;
+    d = Math.max(1, Math.min(10, d + deltaD));
+
+    let newS;
+    if(rating === 1){
+      // zaboravljeno: stability se naglo smanjuje
+      newS = Math.max(0.2, s * this.forgetFactor);
+      lapses += 1;
+    } else {
+      // uspješno: stability raste ovisno o trenutnoj retenciji i ocjeni
+      const daysSince = (now - state.lastReview) / ONE_DAY;
+      const elapsedRatio = Math.min(daysSince / s, 5);
+      // teže pamtljive kartice (visok d) sporije rastu u stability
+      const difficultyPenalty = 1 - (d - 5) * 0.05;
+      const factor = this.stabilityFactor[rating] * difficultyPenalty;
+      newS = s * (1 + factor * Math.exp(-elapsedRatio * 0.5));
+    }
+
+    // ograniči maksimalni interval na 365 dana
+    newS = Math.min(newS, 365);
+
+    return {
+      s: newS,
+      d,
+      reps,
+      lapses,
+      lastReview: now,
+      due: now + newS * ONE_DAY
+    };
+  },
+
+  isDue(state, nowMs){
+    if(!state) return true;
+    return (nowMs || Date.now()) >= state.due;
+  }
+};
+
+function getDueCards(limit){
+  // 1) dospjele kartice (najprije najduže preopterećene)
+  // 2) nove kartice ako ima slobodnog prostora
+  const now = Date.now();
+  const due = [];
+  const fresh = [];
+  CARDS.forEach(c=>{
     const st = state.progress.cardStats[c.id];
-    let score = 0;
-    if(!st) score = 100; // never seen -> high priority
-    else if(st.lastRate === 'again') score = 90;
-    else if(st.lastRate === 'ok') score = 50;
-    else score = 5; // easy
-    return {c, score: score + Math.random()*10};
+    if(!st || !st.fsrs){
+      fresh.push(c);
+    } else if(FSRS.isDue(st.fsrs, now)){
+      due.push({c, overdue: now - st.fsrs.due});
+    }
   });
-  withScore.sort((a,b)=>b.score-a.score);
-  return withScore.slice(0,n).map(x=>x.c);
+  // dospjele sortiraj po tome koliko su zakašnjele
+  due.sort((a,b)=>b.overdue - a.overdue);
+  shuffle(fresh);
+  const result = due.slice(0, limit).map(x=>x.c);
+  if(result.length < limit){
+    result.push(...fresh.slice(0, limit - result.length));
+  }
+  return result;
+}
+
+function formatInterval(days){
+  if(days < 1) return Math.round(days*24) + 'h';
+  if(days < 30) return Math.round(days) + 'd';
+  if(days < 365) return Math.round(days/30) + 'mj';
+  return Math.round(days/365) + 'g';
 }
 
 /* ===================== FLASHCARDS ===================== */
 function openFlashSession(cards){
-  if(!cards.length) cards = weakestCards(20);
+  if(!cards.length) cards = getDueCards(20);
   state.flash.queue = shuffle(cards.slice());
   state.flash.idx = 0;
   state.flash.flipped = false;
@@ -146,7 +263,7 @@ function openFlashSession(cards){
 }
 
 document.getElementById('btnQuickFlash').addEventListener('click', ()=>{
-  openFlashSession(weakestCards(20));
+  openFlashSession(getDueCards(20));
 });
 
 function renderFlash(){
@@ -178,6 +295,20 @@ function renderFlash(){
   state.flash.flipped = false;
   document.getElementById('rateRow').classList.remove('show');
   document.getElementById('tapHint').style.display = '';
+
+  // predviđeni intervali za svaki gumb (FSRS preview)
+  const cardStat = state.progress.cardStats[c.id];
+  const currentFsrs = cardStat ? cardStat.fsrs : null;
+  const now = Date.now();
+  [1,2,3,4].forEach(r=>{
+    const preview = FSRS.schedule(currentFsrs, r, now);
+    const days = preview.s;
+    const btn = document.querySelector(`.rate-btn[data-rate="${['again','hard','ok','easy'][r-1]}"]`);
+    if(btn){
+      const sub = btn.querySelector('.rate-interval');
+      if(sub) sub.textContent = formatInterval(days);
+    }
+  });
 }
 
 document.getElementById('flashcard').addEventListener('click', ()=>{
@@ -192,11 +323,14 @@ document.getElementById('rateRow').addEventListener('click', (e)=>{
   const btn = e.target.closest('.rate-btn');
   if(!btn) return;
   const rate = btn.dataset.rate;
+  const ratingMap = {again:1, hard:2, ok:3, easy:4};
+  const rating = ratingMap[rate] || 3;
   const c = state.flash.queue[state.flash.idx];
-  const st = state.progress.cardStats[c.id] || {seen:0, again:0, ok:0, easy:0};
+  const st = state.progress.cardStats[c.id] || {seen:0, again:0, hard:0, ok:0, easy:0, fsrs:null};
   st.seen += 1;
-  st[rate === 'again' ? 'again' : rate === 'ok' ? 'ok' : 'easy'] += 1;
+  st[rate] = (st[rate] || 0) + 1;
   st.lastRate = rate;
+  st.fsrs = FSRS.schedule(st.fsrs, rating);
   state.progress.cardStats[c.id] = st;
   saveProgress();
 
@@ -215,7 +349,7 @@ function finishFlashSession(){
     pct,
     title: 'Sesija kartica završena',
     sub: `${easyCount} od ${total} oznacenih kao poznato. Slabe točke se ponovo prikazuju prioritetno.`,
-    retryAction: ()=>openFlashSession(weakestCards(20))
+    retryAction: ()=>openFlashSession(getDueCards(20))
   });
 }
 
@@ -348,9 +482,26 @@ function showResult({pct, title, sub, retryAction}){
   renderDomainMap();
 }
 
+function updateHomeStats(){
+  const now = Date.now();
+  let due = 0, fresh = 0;
+  CARDS.forEach(c=>{
+    const st = state.progress.cardStats[c.id];
+    if(!st || !st.fsrs) fresh++;
+    else if(FSRS.isDue(st.fsrs, now)) due++;
+  });
+  const desc = document.getElementById('quickFlashDesc');
+  if(desc){
+    if(due > 0) desc.textContent = `${due} kartica za pregled, ${fresh} novih`;
+    else if(fresh > 0) desc.textContent = `Sve svladano za danas, ${fresh} novih za učenje`;
+    else desc.textContent = `Sve kartice viđene, ponovi po želji`;
+  }
+}
+
 /* ===================== INIT ===================== */
 updateStreak();
 renderDomainMap();
+updateHomeStats();
 
 /* Service worker registration */
 if('serviceWorker' in navigator){

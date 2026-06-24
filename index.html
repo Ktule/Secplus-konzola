@@ -164,6 +164,7 @@ button{
   color:var(--text-dim);
   margin-top:auto;
 }
+.domain-tile .meta .due-count{color:var(--amber);}
 .domain-tile .bar{
   position:absolute;
   bottom:0; left:0; right:0;
@@ -332,24 +333,39 @@ button{
 
 .rate-row{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr;
-  gap:8px;
+  grid-template-columns:repeat(4, 1fr);
+  gap:6px;
   margin-top:18px;
 }
 .rate-btn{
-  padding:13px 8px;
+  padding:10px 4px;
   border-radius:10px;
-  font-size:13px;
+  font-size:12.5px;
   font-weight:600;
   text-align:center;
   border:1px solid var(--line);
   opacity:0;
   pointer-events:none;
   transition:opacity .2s;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  min-height:54px;
+  justify-content:center;
+}
+.rate-btn .rate-label{display:block;}
+.rate-btn .rate-interval{
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:400;
+  opacity:0.7;
 }
 .rate-row.show .rate-btn{opacity:1; pointer-events:all;}
 .rate-btn.again{color:var(--red); border-color:#5A2426;}
 .rate-btn.again:active{background:rgba(229,72,77,0.12);}
+.rate-btn.hard{color:#E5984D; border-color:#6B4225;}
+.rate-btn.hard:active{background:rgba(229,152,77,0.12);}
 .rate-btn.ok{color:var(--amber); border-color:var(--amber-dim);}
 .rate-btn.ok:active{background:rgba(245,166,35,0.1);}
 .rate-btn.easy{color:var(--green); border-color:#1F5C30;}
@@ -541,8 +557,8 @@ button{
   <div class="mode-row">
     <button class="mode-card" id="btnQuickFlash">
       <div class="icon">▣</div>
-      <div class="title">Kartice — slabe točke</div>
-      <div class="desc">20 kartica, prioritet pojmovima koje često griješiš</div>
+      <div class="title">Kartice za pregled</div>
+      <div class="desc" id="quickFlashDesc">SRS raspored, najprije dospjele kartice</div>
     </button>
     <button class="mode-card" id="btnQuickQuiz">
       <div class="icon">▤</div>
@@ -580,9 +596,22 @@ button{
     </div>
   </div>
   <div class="rate-row" id="rateRow">
-    <button class="rate-btn again" data-rate="again">Ne znam</button>
-    <button class="rate-btn ok" data-rate="ok">Polovično</button>
-    <button class="rate-btn easy" data-rate="easy">Znam</button>
+    <button class="rate-btn again" data-rate="again">
+      <span class="rate-label">Ne znam</span>
+      <span class="rate-interval">·</span>
+    </button>
+    <button class="rate-btn hard" data-rate="hard">
+      <span class="rate-label">Teško</span>
+      <span class="rate-interval">·</span>
+    </button>
+    <button class="rate-btn ok" data-rate="ok">
+      <span class="rate-label">Dobro</span>
+      <span class="rate-interval">·</span>
+    </button>
+    <button class="rate-btn easy" data-rate="easy">
+      <span class="rate-label">Znam</span>
+      <span class="rate-interval">·</span>
+    </button>
   </div>
   <div class="tap-hint" id="tapHint">okreni karticu prije ocjene</div>
 </div>
