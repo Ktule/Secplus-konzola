@@ -381,7 +381,7 @@ button{
 .exam-domain-row .dn{flex:1; color:var(--text-dim);}
 .exam-domain-row .dscore{color:var(--text); min-width:60px; text-align:right;}
 .exam-domain-row .dbar{flex:0 0 60px; height:4px; background:var(--line); border-radius:2px; overflow:hidden;}
-.exam-domain-row .dbar-fill{height:100%; background:var(--green);}
+.exam-domain-row .dbar-fill{display:block; height:100%; background:var(--green);}
 
 .exam-filter{
   display:flex;
@@ -633,6 +633,7 @@ button{
 }
 
 /* ===== QUIZ VIEW ===== */
+.quiz-q.scen{font-size:16px; font-weight:500; line-height:1.55;}
 .quiz-q{
   font-size:18px;
   font-weight:600;
@@ -783,6 +784,152 @@ button{
 }
 .navbtn.active{color:var(--amber);}
 .navbtn .glyph{font-size:17px; line-height:1;}
+body.in-exam .bottomnav{display:none;}
+body.in-exam .view{padding-bottom:30px;}
+
+/* ===== HOME: exam card ===== */
+.mode-card-exam{
+  border-color:var(--amber-dim);
+  background:linear-gradient(135deg, rgba(245,166,35,0.07), var(--bg-card));
+}
+
+/* ===== SEGMENT ===== */
+.segment{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:4px;
+  padding:4px;
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:10px;
+  margin-bottom:16px;
+}
+.seg-btn{
+  padding:9px 8px;
+  border-radius:7px;
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:600;
+  color:var(--text-dim);
+}
+.seg-btn.active{background:var(--line-bright); color:var(--text);}
+
+/* ===== EXPLANATION ===== */
+.explain-box{
+  margin-top:16px;
+  padding:14px 16px;
+  border:1px solid var(--line);
+  border-left:3px solid var(--cyan);
+  border-radius:10px;
+  background:var(--bg-card);
+}
+.explain-head{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--cyan);
+  margin-bottom:8px;
+}
+.explain-text{font-size:13.5px; line-height:1.55; color:var(--text);}
+.explain-meta{
+  font-family:var(--mono);
+  font-size:10.5px;
+  color:var(--text-dim);
+  margin-top:10px;
+  line-height:1.5;
+}
+.report-btn{
+  margin-top:12px;
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--text-faint);
+  padding:6px 10px;
+  border:1px solid var(--line);
+  border-radius:6px;
+}
+.report-btn.active{color:var(--amber); border-color:var(--amber-dim); background:rgba(245,166,35,0.08);}
+
+/* ===== EXAM HOME ===== */
+.exam-rules{
+  background:var(--bg-card);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:6px 16px;
+}
+.exam-rules .rule{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  padding:9px 0;
+  border-bottom:1px solid var(--line);
+  font-size:13px;
+}
+.exam-rules .rule:last-child{border-bottom:none;}
+.exam-rules .rk{font-family:var(--mono); font-size:11px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.05em;}
+.exam-rules .rv{text-align:right;}
+.exam-dist{display:flex; flex-direction:column; gap:6px; margin-bottom:6px;}
+.exam-dist-row{
+  display:flex; justify-content:space-between; gap:10px;
+  font-size:12px; padding:9px 12px;
+  background:var(--bg-card); border:1px solid var(--line); border-radius:8px;
+}
+.exam-dist-row .n{font-family:var(--mono); color:var(--amber); white-space:nowrap;}
+
+/* ===== STATS ===== */
+.stats-overview{display:grid; grid-template-columns:repeat(3,1fr); gap:8px;}
+.stat-box{
+  background:var(--bg-card); border:1px solid var(--line); border-radius:10px;
+  padding:14px 10px; text-align:center;
+}
+.stat-box .num{font-family:var(--mono); font-size:22px; font-weight:700; line-height:1;}
+.stat-box .num.green{color:var(--green);}
+.stat-box .num.amber{color:var(--amber);}
+.stat-box .num.dim{color:var(--text-dim);}
+.stat-box .lbl{font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--text-faint); margin-top:6px;}
+.stats-domain-list{display:flex; flex-direction:column; gap:6px;}
+.stats-row{
+  display:flex; align-items:center; gap:10px;
+  background:var(--bg-card); border:1px solid var(--line); border-radius:8px;
+  padding:10px 12px; text-align:left; width:100%;
+}
+.stats-row .sdn{flex:1; font-size:12px; color:var(--text); min-width:0;}
+.stats-row .sdn small{display:block; font-family:var(--mono); font-size:10px; color:var(--text-faint); margin-top:2px;}
+.stats-row .sdbar{flex:0 0 70px; height:5px; background:var(--line); border-radius:3px; overflow:hidden;}
+.stats-row .sdbar-fill{display:block; height:100%; border-radius:3px;}
+.stats-row .sdpct{font-family:var(--mono); font-size:11px; font-weight:600; min-width:40px; text-align:right;}
+.stats-row .go{font-family:var(--mono); font-size:11px; color:var(--cyan);}
+.activity-chart{
+  background:var(--bg-card); border:1px solid var(--line); border-radius:12px;
+  padding:14px 12px 10px; display:flex; align-items:flex-end; gap:2px; height:120px;
+}
+.activity-bar{flex:1; height:100%; display:flex; align-items:flex-end;}
+.activity-bar .abar{width:100%; max-width:9px; margin:0 auto; background:var(--cyan); border-radius:2px 2px 0 0; min-height:2px;}
+.activity-bar .abar.empty{background:var(--line);}
+.exam-history{display:flex; flex-direction:column; gap:8px;}
+.exam-history-row{
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--bg-card); border:1px solid var(--line); border-radius:8px; padding:12px 14px;
+}
+.exam-history-row .ehdate{font-family:var(--mono); font-size:11px; color:var(--text-dim);}
+.exam-history-row .ehscore{font-family:var(--mono); font-size:14px; font-weight:700;}
+.exam-history-row .ehscore.pass{color:var(--green);}
+.exam-history-row .ehscore.fail{color:var(--red);}
+.stats-empty{
+  text-align:center; color:var(--text-faint); font-family:var(--mono); font-size:12px;
+  padding:20px; background:var(--bg-card); border:1px solid var(--line); border-radius:10px;
+}
+.reported-text{
+  width:100%; min-height:110px; margin-top:8px;
+  background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px;
+  font-family:var(--mono); font-size:11px; padding:10px;
+}
+.weak-box{
+  background:var(--bg-card); border:1px solid var(--line); border-radius:12px;
+  padding:14px; margin-bottom:16px;
+}
+.weak-box .wt{font-family:var(--mono); font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px;}
+.review-expl{font-size:12.5px; line-height:1.5; color:var(--text-dim); margin-top:8px;}
 
 @media (min-width:600px){
   .domain-map{grid-template-columns:repeat(3,1fr);}
@@ -803,8 +950,8 @@ button{
 <div class="view active" id="view-home">
   <div class="hero">
     <div class="hero-eyebrow">SY0-701 // priprema za ispit</div>
-    <h1>26 domena. Jedan ekran.</h1>
-    <p>Kartice i kviz iz cjelokupnog gradiva Security+, mapirano po domeni. Radi offline, pamti napredak na uređaju.</p>
+    <h1>Kartice, scenariji, ispit.</h1>
+    <p>Pojmovi iz study guidea i 300 scenarijskih pitanja po ciljevima SY0-701. Radi offline, pamti napredak na uređaju.</p>
   </div>
 
   <div class="section-label">Brzi start</div>
@@ -816,13 +963,18 @@ button{
     </button>
     <button class="mode-card" id="btnQuickQuiz">
       <div class="icon">▤</div>
-      <div class="title">Kviz — nasumično</div>
-      <div class="desc">15 pitanja iz svih domena, s objašnjenjima</div>
+      <div class="title">Kviz pojmovi</div>
+      <div class="desc">15 definicijskih pitanja iz study guidea</div>
     </button>
-    <button class="mode-card mode-card-wide" id="btnExamMode">
+    <button class="mode-card" id="btnQuickScen">
+      <div class="icon">◇</div>
+      <div class="title">Kviz scenariji</div>
+      <div class="desc" id="quickScenDesc">15 ispitnih pitanja s objašnjenjem</div>
+    </button>
+    <button class="mode-card mode-card-exam" id="btnExamHome">
       <div class="icon">⏱</div>
-      <div class="title">Test mode — simulacija ispita</div>
-      <div class="desc">90 pitanja u 90 minuta, bez prikaza odgovora do kraja. Pregled svih odgovora i objašnjenja na kraju.</div>
+      <div class="title">Ispit</div>
+      <div class="desc">90 pitanja, 90 minuta, prolaz uz najviše 10 pogrešnih</div>
     </button>
   </div>
 
@@ -882,9 +1034,19 @@ button{
     <div class="progress-track"><div class="progress-fill" id="quizProgress"></div></div>
     <div class="counter" id="quizCounter">0/0</div>
   </div>
+  <div class="segment" id="quizSegment">
+    <button class="seg-btn active" data-mode="terms">Pojmovi</button>
+    <button class="seg-btn" data-mode="scen">Scenariji</button>
+  </div>
   <div class="quiz-domain-tag" id="quizDomainTag"></div>
   <div class="quiz-q" id="quizQuestion"></div>
   <div class="option-list" id="optionList"></div>
+  <div class="explain-box" id="quizExplain" style="display:none;">
+    <div class="explain-head">Explanation</div>
+    <div class="explain-text" id="quizExplainText"></div>
+    <div class="explain-meta" id="quizExplainMeta"></div>
+    <button class="report-btn" id="quizReport">⚐ Prijavi pitanje</button>
+  </div>
   <div class="quiz-domain-note" id="quizDomainNote" style="display:none;"></div>
   <div class="quiz-footer">
     <div class="score-line">Točno: <b id="quizScore">0</b></div>
@@ -892,7 +1054,27 @@ button{
   </div>
 </div>
 
-<!-- EXAM (TEST MODE) VIEW -->
+<!-- EXAM HOME VIEW -->
+<div class="view" id="view-exam-home">
+  <div class="hero" style="padding-bottom:8px;">
+    <div class="hero-eyebrow">simulacija ispita</div>
+    <h1 style="font-size:22px;">Ispit SY0-701</h1>
+    <p>90 scenarijskih pitanja raspoređenih po službenim težinama domena. Odgovori se ne prikazuju do predaje.</p>
+  </div>
+  <div class="exam-rules">
+    <div class="rule"><span class="rk">Pitanja</span><span class="rv">90</span></div>
+    <div class="rule"><span class="rk">Vrijeme</span><span class="rv">90 min</span></div>
+    <div class="rule"><span class="rk">Prolaz</span><span class="rv">najmanje 80 točnih</span></div>
+    <div class="rule"><span class="rk">Neodgovoreno</span><span class="rv">računa se kao pogrešno</span></div>
+  </div>
+  <div class="section-label">Raspodjela po domenama</div>
+  <div class="exam-dist" id="examDist"></div>
+  <button class="exam-submit" id="examStart">Pokreni ispit</button>
+  <div class="section-label">Zadnji rezultati</div>
+  <div class="exam-history" id="examHomeHistory"></div>
+</div>
+
+<!-- EXAM VIEW -->
 <div class="view" id="view-exam">
   <div class="exam-header">
     <button class="back-btn" id="examBack">← prekini</button>
@@ -902,7 +1084,7 @@ button{
   <div class="exam-progress-track"><div class="exam-progress-fill" id="examProgress"></div></div>
 
   <div class="exam-domain-tag" id="examDomainTag"></div>
-  <div class="quiz-q" id="examQuestion"></div>
+  <div class="quiz-q scen" id="examQuestion"></div>
   <div class="option-list" id="examOptionList"></div>
 
   <div class="exam-nav">
@@ -913,7 +1095,7 @@ button{
 
   <div class="exam-jumpbar" id="examJumpbar"></div>
 
-  <button class="exam-submit" id="examSubmit">Predaj test</button>
+  <button class="exam-submit" id="examSubmit">Predaj ispit</button>
 </div>
 
 <!-- EXAM REVIEW VIEW -->
@@ -923,6 +1105,7 @@ button{
     <div class="counter" id="examReviewCounter">Pregled</div>
   </div>
   <div class="exam-summary" id="examSummary"></div>
+  <div id="examWeak"></div>
   <div class="exam-filter" id="examFilter">
     <button class="exam-filter-btn active" data-filter="all">Sva</button>
     <button class="exam-filter-btn" data-filter="wrong">Pogrešna</button>
@@ -967,13 +1150,36 @@ button{
   </div>
 </div>
 
+<!-- STATS VIEW -->
+<div class="view" id="view-stats">
+  <div class="hero" style="padding-bottom:8px;">
+    <div class="hero-eyebrow">napredak</div>
+    <h1 style="font-size:22px;">Statistika</h1>
+  </div>
+  <div class="section-label">Kartice</div>
+  <div class="stats-overview" id="statsCards"></div>
+  <div class="section-label">Scenariji po domenama</div>
+  <div class="stats-domain-list" id="statsDomains"></div>
+  <div class="section-label">Najslabiji ciljevi</div>
+  <div class="stats-domain-list" id="statsObjectives"></div>
+  <div class="section-label">Aktivnost, 30 dana</div>
+  <div class="activity-chart" id="activityChart"></div>
+  <div class="section-label">Povijest ispita</div>
+  <div class="exam-history" id="examHistoryList"></div>
+  <div class="section-label">Prijavljena pitanja</div>
+  <div id="reportedBox"></div>
+</div>
+
 <div class="bottomnav">
   <button class="navbtn active" data-view="home"><span class="glyph">◆</span>Početna</button>
   <button class="navbtn" data-view="flash"><span class="glyph">▣</span>Kartice</button>
   <button class="navbtn" data-view="quiz"><span class="glyph">▤</span>Kviz</button>
+  <button class="navbtn" data-view="exam-home"><span class="glyph">⏱</span>Ispit</button>
+  <button class="navbtn" data-view="stats"><span class="glyph">◷</span>Statistika</button>
 </div>
 
 <script src="data.js"></script>
+<script src="questions.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

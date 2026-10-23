@@ -1,9 +1,10 @@
-const CACHE = 'secplus-v3';
+const CACHE = 'secplus-v5';
 const ASSETS = [
   './',
   './index.html',
   './app.js',
   './data.js',
+  './questions.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
